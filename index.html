@@ -533,19 +533,14 @@ function renderGenerator(){
     if (img.value.trim() && !cfg.img){ toast('图片地址要以 http(s):// 开头'); return; }
     var tail = st.ph ? '.' + st.ph : '';
     var url = baseUrl() + '#' + b64urlEncode(JSON.stringify(cfg)) + tail;
-    cfg.pv = 1;   // 预览版：走一遍但不真的发送
-    var pvUrl = baseUrl() + '#' + b64urlEncode(JSON.stringify(cfg)) + tail;
     var rUrl = repliesUrl(topic);
     resultBox.innerHTML = '';
     resultBox.classList.remove('hidden');
     var linkOut = el('div',{class:'link-out',text:url});
     resultBox.appendChild(el('div',{class:'label',text:'你的专属邀请链接 💌'}));
     resultBox.appendChild(linkOut);
-    resultBox.appendChild(el('div',{class:'btn-pair'},[
-      el('button',{type:'button',class:'btn primary',text:'复制链接',onclick:function(){ copyText(url, resultBox); }}),
-      el('a',{class:'btn',href:pvUrl,target:'_blank',rel:'noopener',style:'text-align:center;text-decoration:none;color:inherit',text:'先预览 👀'})
-    ]));
-    resultBox.appendChild(el('p',{class:'note',text:'这条发给 TA。预览是你自己走一遍，不会真的发出回信。'}));
+    resultBox.appendChild(el('button',{type:'button',class:'btn primary',style:'width:100%',text:'复制链接',onclick:function(){ copyText(url, resultBox); }}));
+    resultBox.appendChild(el('p',{class:'note',text:'这条发给 TA。'}));
 
     resultBox.appendChild(el('div',{class:'sec-title',text:'你的「看回信」链接 📬 自己收好，别发给 TA'}));
     resultBox.appendChild(el('div',{class:'link-out',text:rUrl}));
