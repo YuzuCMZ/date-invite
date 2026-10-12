@@ -1,0 +1,905 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="color-scheme" content="light">
+<meta name="theme-color" content="#f6c9e6">
+<meta name="robots" content="noindex">
+<title>约会邀请</title>
+<style>
+:root{
+  --ink:#1b1b1f;
+  --pink:#ff4fa8;
+  --pink-deep:#e8358f;
+  --pink-soft:#ffe3f1;
+  --lav:#e6dafd;
+  --card:#ffffff;
+  --muted:#6b6670;
+  --line:3px;
+  --shadow:6px 6px 0 var(--ink);
+  --shadow-sm:3px 3px 0 var(--ink);
+  --radius:28px;
+  --font:-apple-system,BlinkMacSystemFont,"PingFang SC","Hiragino Sans GB","Microsoft YaHei","Noto Sans CJK SC","Source Han Sans SC",system-ui,sans-serif;
+}
+*{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+html,body{margin:0;min-height:100%}
+body{
+  font-family:var(--font);color:var(--ink);
+  background:linear-gradient(160deg,#fbd3ea 0%,#ead9fb 45%,#f3e6f7 70%,#e4f3df 100%) fixed;
+  background-color:#f3dcf2;
+  min-height:100vh;min-height:100dvh;
+  display:flex;flex-direction:column;align-items:center;
+  padding:max(20px,env(safe-area-inset-top)) 16px max(20px,env(safe-area-inset-bottom));
+  overflow-x:hidden;
+}
+button,input,select,textarea{font-family:inherit;color:inherit}
+.hidden{display:none!important}
+
+/* 飘落小花 */
+#petals{position:fixed;inset:0;pointer-events:none;z-index:0;overflow:hidden}
+.petal{position:absolute;top:-40px;font-size:18px;opacity:.85;animation:fall linear infinite}
+@keyframes fall{
+  0%{transform:translate3d(0,-40px,0) rotate(0)}
+  50%{transform:translate3d(28px,50vh,0) rotate(160deg)}
+  100%{transform:translate3d(-12px,105vh,0) rotate(340deg)}
+}
+@media (prefers-reduced-motion:reduce){.petal{animation:none;display:none}}
+
+main{position:relative;z-index:1;width:100%;max-width:400px;flex:1;display:flex;flex-direction:column;justify-content:center}
+
+/* 卡片 */
+.card{
+  position:relative;background:var(--card);border:var(--line) solid var(--ink);
+  border-radius:var(--radius);box-shadow:var(--shadow);
+  padding:30px 22px 26px;text-align:center;margin:12px 0;
+  animation:pop .38s cubic-bezier(.2,1.4,.4,1);
+}
+@keyframes pop{from{transform:scale(.9) translateY(10px);opacity:0}to{transform:none;opacity:1}}
+.shake{animation:shake .4s}
+@keyframes shake{20%,60%{transform:translateX(-6px)}40%,80%{transform:translateX(6px)}}
+
+.avatar{
+  width:96px;height:96px;margin:0 auto 18px;border:var(--line) solid var(--ink);border-radius:24px;
+  background:var(--pink-soft);box-shadow:6px 6px 0 var(--pink);
+  display:flex;align-items:center;justify-content:center;font-size:54px;line-height:1;overflow:hidden;
+}
+.avatar img{width:100%;height:100%;object-fit:cover;display:block}
+.icon-box{
+  width:64px;height:64px;margin:0 auto 18px;border:var(--line) solid var(--ink);border-radius:18px;
+  background:var(--pink);box-shadow:var(--shadow-sm);
+  display:flex;align-items:center;justify-content:center;font-size:34px;
+}
+.icon-box.red{background:#ff5a5f}
+h1{font-size:25px;line-height:1.35;font-weight:900;margin:0 0 10px;letter-spacing:.5px;word-break:break-word}
+h1 .flower{font-size:.85em}
+.sub{font-size:13.5px;color:var(--muted);margin:0 0 22px;line-height:1.6;word-break:break-word}
+.from{font-size:12.5px;color:var(--pink-deep);font-weight:700;margin:-12px 0 20px}
+
+/* 按钮 */
+.btn{
+  appearance:none;border:var(--line) solid var(--ink);border-radius:999px;
+  background:#fff;box-shadow:var(--shadow-sm);
+  font-size:16px;font-weight:800;padding:11px 22px;cursor:pointer;
+  transition:transform .08s, box-shadow .08s;
+  white-space:nowrap;
+}
+.btn:active{transform:translate(3px,3px);box-shadow:0 0 0 var(--ink)}
+.btn.primary{background:var(--pink);color:#fff;text-shadow:0 1px 0 rgba(0,0,0,.15)}
+.btn.block{display:block;width:100%;padding:14px 20px;font-size:17px}
+.btn.small{font-size:14px;padding:8px 16px}
+.btn-row{display:flex;gap:16px;justify-content:center;align-items:center;flex-wrap:wrap;min-height:56px}
+#noBtn{transition:left .35s cubic-bezier(.3,1.4,.5,1),top .35s cubic-bezier(.3,1.4,.5,1),transform .3s,opacity .3s;transform-origin:0 0;position:relative;z-index:2}
+#yesBtn.boing{animation:boing .35s}
+@keyframes boing{40%{transform:scale(1.12)}100%{transform:none}}
+.step1-row{min-height:120px}
+.hint{font-size:12.5px;color:var(--muted);margin-top:14px;min-height:1em}
+
+/* 表单 */
+.field{text-align:left;margin-bottom:16px}
+.field>label,.label{display:block;font-size:13.5px;font-weight:800;margin:0 0 7px 4px}
+.label small{font-weight:500;color:var(--muted)}
+.input{
+  width:100%;border:var(--line) solid var(--ink);border-radius:16px;background:#fff;
+  font-size:16px;padding:12px 14px;box-shadow:var(--shadow-sm);outline:none;min-height:50px;
+  -webkit-appearance:none;appearance:none;
+}
+.input:focus{border-color:var(--pink-deep);box-shadow:3px 3px 0 var(--pink)}
+input[type=date].input,input[type=time].input{display:block;line-height:1.3;text-align:left}
+input[type=date]::-webkit-date-and-time-value,input[type=time]::-webkit-date-and-time-value{text-align:left}
+.chips{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin-top:10px}
+.chip{
+  border:2px solid var(--ink);border-radius:999px;background:#fff;font-size:13.5px;font-weight:700;
+  padding:6px 12px;cursor:pointer;box-shadow:2px 2px 0 var(--ink);
+}
+.chip.on{background:var(--pink);color:#fff}
+
+/* 吃什么 */
+.food-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:12px;margin-bottom:6px}
+.food{
+  border:var(--line) solid var(--ink);border-radius:18px;background:#fff;box-shadow:var(--shadow-sm);
+  aspect-ratio:1/1;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:4px;
+  cursor:pointer;padding:6px;transition:transform .08s,background .15s;
+}
+.food .e{font-size:32px;line-height:1.1}
+.food .t{font-size:13px;font-weight:800}
+.food:active{transform:translate(3px,3px);box-shadow:0 0 0 var(--ink)}
+.food.on{background:var(--pink-soft);border-color:var(--pink-deep);box-shadow:3px 3px 0 var(--pink-deep)}
+.other-box{margin-top:14px;display:flex;gap:10px}
+.other-box .input{flex:1}
+
+/* 汇总 */
+.summary{
+  border:var(--line) solid var(--ink);border-radius:20px;background:#fff;padding:12px;
+  display:grid;grid-template-columns:1fr 1fr;gap:10px;text-align:left;margin-bottom:16px;box-shadow:var(--shadow-sm);
+}
+.cell{border:2px solid var(--ink);border-radius:14px;padding:8px 12px;background:#fffafd}
+.cell.wide{grid-column:1/-1}
+.cell .k{font-size:10.5px;font-weight:900;letter-spacing:1.5px;color:var(--pink-deep)}
+.cell .v{font-size:17px;font-weight:900;margin-top:2px;word-break:break-word}
+.hearts{color:var(--pink);letter-spacing:10px;font-size:14px;margin:4px 0 18px}
+.copy-out{width:100%;min-height:120px;margin-top:12px;font-size:14px;resize:vertical}
+.tiny-link{background:none;border:0;color:var(--muted);font-size:12.5px;text-decoration:underline;cursor:pointer;margin-top:12px;padding:6px}
+
+/* 进度点 */
+.dots{display:flex;gap:7px;justify-content:center;margin-top:20px}
+.dots i{width:8px;height:8px;border-radius:50%;border:2px solid var(--ink);background:#fff}
+.dots i.on{background:var(--pink);width:20px;border-radius:6px}
+
+/* 生成器 */
+.gen h1{font-size:23px}
+.seg{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+.seg button{
+  border:var(--line) solid var(--ink);border-radius:16px;background:#fff;box-shadow:var(--shadow-sm);
+  padding:12px 6px;font-size:15px;font-weight:800;cursor:pointer;line-height:1.35;
+}
+.seg button small{display:block;font-size:11.5px;font-weight:600;color:var(--muted)}
+.seg button.on{background:var(--pink);color:#fff}
+.seg button.on small{color:#ffe8f4}
+.av-pick{display:grid;grid-template-columns:repeat(6,1fr);gap:8px}
+.av-pick button{
+  aspect-ratio:1/1;border:2px solid var(--ink);border-radius:14px;background:#fff;font-size:24px;cursor:pointer;
+  box-shadow:2px 2px 0 var(--ink);padding:0;display:flex;align-items:center;justify-content:center;
+}
+.av-pick button.on{background:var(--pink-soft);border-color:var(--pink-deep);box-shadow:2px 2px 0 var(--pink-deep);outline:2px solid var(--pink);outline-offset:1px}
+.photo-row{display:flex;gap:10px;align-items:center;margin-top:10px}
+.photo-row .btn{flex:1;text-align:center;padding:10px 12px;font-size:14.5px}
+.photo-prev{width:52px;height:52px;border:var(--line) solid var(--ink);border-radius:14px;overflow:hidden;flex:none;box-shadow:2px 2px 0 var(--pink)}
+.photo-prev img{width:100%;height:100%;object-fit:cover;display:block}
+.food-pick{display:grid;grid-template-columns:repeat(4,1fr);gap:8px}
+.food-pick button{
+  border:2px solid var(--ink);border-radius:14px;background:#fff;box-shadow:2px 2px 0 var(--ink);
+  padding:7px 2px;font-size:12px;font-weight:700;cursor:pointer;display:flex;flex-direction:column;align-items:center;gap:2px;
+}
+.food-pick button .e{font-size:20px}
+.food-pick button.on{background:var(--pink-soft);border-color:var(--pink-deep)}
+.food-pick button:not(.on){opacity:.5}
+.result-box{margin-top:18px;text-align:left}
+.link-out{font-size:13px;word-break:break-all;background:#fffafd;border:2px dashed var(--ink);border-radius:14px;padding:10px 12px;margin-bottom:12px;max-height:120px;overflow:auto}
+.btn-pair{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+.btn-pair .btn{width:100%;padding:12px 8px}
+.note{font-size:12px;color:var(--muted);line-height:1.6;margin-top:12px}
+.note.warn{color:#b0306f}
+.sec-title{font-size:13.5px;font-weight:900;margin:22px 0 7px 4px}
+.sent-ok{border:var(--line) solid var(--ink);border-radius:18px;background:#e9fbe5;padding:12px 14px;font-weight:800;font-size:15px;box-shadow:var(--shadow-sm);margin-bottom:6px}
+.btn[disabled]{opacity:.6;cursor:default}
+.reply-card{text-align:left;margin-bottom:14px}
+.reply-card .when{font-size:12px;color:var(--muted);font-weight:700;margin:0 0 8px 4px}
+.reply-card .summary{margin-bottom:8px}
+.reply-card .msg{font-size:14px;line-height:1.65;white-space:pre-wrap;word-break:break-word;background:#fffafd;border:2px dashed var(--ink);border-radius:14px;padding:10px 12px}
+.waiting{font-size:16px;font-weight:800;margin:6px 0 4px}
+.waiting .dots-anim::after{content:'';animation:ell 1.4s steps(4) infinite}
+@keyframes ell{0%{content:''}25%{content:'.'}50%{content:'..'}75%{content:'...'}}
+
+#toast{
+  position:fixed;left:50%;bottom:calc(28px + env(safe-area-inset-bottom));transform:translateX(-50%) translateY(20px);
+  background:var(--ink);color:#fff;font-size:14px;font-weight:700;padding:10px 18px;border-radius:999px;
+  opacity:0;transition:.25s;z-index:50;pointer-events:none;max-width:calc(100% - 32px);text-align:center;
+}
+#toast.show{opacity:1;transform:translateX(-50%) translateY(0)}
+footer{position:relative;z-index:1;font-size:10px;color:rgba(27,27,31,.35);margin-top:10px;min-height:12px}
+</style>
+</head>
+<body>
+<div id="petals" aria-hidden="true"></div>
+<main id="app"></main>
+<footer></footer>
+<div id="toast" role="status" aria-live="polite"></div>
+
+<script>
+(function(){
+'use strict';
+
+/* ========== 可改的文案和数据 ========== */
+
+var FOODS = [
+  ['🍕','披萨',1],['🍣','寿司',1],['🍲','火锅',1],['🥩','烤肉',1],['🥟','早茶',1],
+  ['🍜','拉面',1],['🌶️','麻辣烫',1],['🦞','小龙虾',1],['🍢','烧烤',1],
+  ['🍰','甜品',0],['🍝','西餐',0],['🍔','汉堡',0],
+  ['✍️','其他',1]
+];
+var OTHER_INDEX = FOODS.length - 1;
+
+var AVATARS = ['🐶','🐱','🐰','🐻','🐼','🦊','🐹','🐧','🐸','🍓','🌷','💌'];
+
+// f = 女生发给男生；m = 男生发给女生
+var COPY = {
+  f: {
+    title: '可以和我一起约会嘛？！',
+    sub: '系统检测到：某个女生已经紧张到开始写网页了。',
+    yes: '愿意 ❤',
+    no: '不要 🙅',
+    noSteps: ['再想想嘛','真的不要吗 🥺','你再考虑一下下','我要哭了哦','我真的会哭的 😭','按钮都要累了','求你了嘛…','好吧这个按钮坏了…'],
+    noGoneHint: '「不要」按钮已经被我没收了 😤',
+    s2Title: '等下，你真的点了愿意？？😭',
+    s2Sub: '我都已经准备好被你点“不要”了。',
+    s2Btn: '好的好的 →',
+    s3Title: '所以…你什么时候有空？🥰',
+    s3Sub: '你挑时间，我负责期待。',
+    s4Title: '我们吃点什么？🍽️✨',
+    s4Sub: '挑一个今天的约会氛围。',
+    s5Title: '真开心你没有拒绝～\n到时候等你来接我哦！',
+    s5Line: function(d,t,f){ return d+' '+t+'，我们去吃'+f+'。我会好好打扮的，你负责带好胃口！'; },
+    reply: function(me,d,t,f){
+      return (me? me+'，' : '')+'约会我答应啦！💕\n📅 '+d+'\n⏰ '+t+'\n🍽️ '+f+'\n到时候我准时来接你，乖乖等我～';
+    }
+  },
+  m: {
+    title: '可以和我一起约会嘛？！',
+    sub: '系统检测到：对方已经紧张到开始写网页了。',
+    yes: '愿意 ❤',
+    no: '不要 🙅',
+    noSteps: ['再给我一次机会嘛','真的吗 🥺','我保证超好玩的','奶茶我请！','那…再加一份甜品？','你点什么都行','按钮快撑不住了','好吧这个按钮罢工了…'],
+    noGoneHint: '「不要」按钮下班了，只剩一个选择啦 😌',
+    s2Title: '等下，你真的点了愿意？？😭',
+    s2Sub: '我连被拒绝之后的安慰奶茶都点好了。',
+    s2Btn: '好的好的 →',
+    s3Title: '所以…你什么时候有空？🥰',
+    s3Sub: '你定时间，我来迁就你。',
+    s4Title: '我们吃点什么？🍽️✨',
+    s4Sub: '你想吃的我都陪。',
+    s5Title: '真开心你没有拒绝～\n我会准时来接你！',
+    s5Line: function(d,t,f){ return d+' '+t+'，我们去吃'+f+'。你只负责带好胃口，路线交给我。'; },
+    reply: function(me,d,t,f){
+      return (me? me+'，' : '')+'我答应你啦！💕\n📅 '+d+'\n⏰ '+t+'\n🍽️ '+f+'\n记得准时来接我哦，不许迟到～';
+    }
+  }
+};
+
+var TIME_CHIPS = ['11:30','12:00','14:00','17:30','18:30','19:00'];
+
+/* ========== 工具 ========== */
+
+var app = document.getElementById('app');
+
+function el(tag, attrs, kids){
+  var n = document.createElement(tag);
+  if (attrs) for (var k in attrs){
+    var v = attrs[k];
+    if (v == null || v === false) continue;
+    if (k === 'class') n.className = v;
+    else if (k === 'text') n.textContent = v;
+    else if (k.slice(0,2) === 'on') n.addEventListener(k.slice(2), v);
+    else n.setAttribute(k, v === true ? '' : v);
+  }
+  (kids||[]).forEach(function(c){ if (c != null) n.appendChild(typeof c === 'string' ? document.createTextNode(c) : c); });
+  return n;
+}
+
+function toast(msg){
+  var t = document.getElementById('toast');
+  t.textContent = msg; t.classList.add('show');
+  clearTimeout(toast._t); toast._t = setTimeout(function(){ t.classList.remove('show'); }, 2000);
+}
+
+function b64urlEncode(str){
+  var bytes = new TextEncoder().encode(str), bin = '';
+  for (var i=0;i<bytes.length;i++) bin += String.fromCharCode(bytes[i]);
+  return btoa(bin).replace(/\+/g,'-').replace(/\//g,'_').replace(/=+$/,'');
+}
+function b64urlDecode(s){
+  s = s.replace(/-/g,'+').replace(/_/g,'/');
+  while (s.length % 4) s += '=';
+  var bin = atob(s), bytes = new Uint8Array(bin.length);
+  for (var i=0;i<bin.length;i++) bytes[i] = bin.charCodeAt(i);
+  return new TextDecoder().decode(bytes);
+}
+
+function toUrl64(s){ return s.replace(/\+/g,'-').replace(/\//g,'_').replace(/=+$/,''); }
+function fromUrl64(s){ s = s.replace(/-/g,'+').replace(/_/g,'/'); while (s.length % 4) s += '='; return s; }
+var PHOTO_BUDGET = 3300;   // 照片 base64 字符上限，整条链接要压在 TG 单条消息 4096 字符以内
+
+// 把照片裁成正方形，压成小 JPEG，返回 base64url 字符串
+function shrinkPhoto(file, cb){
+  var fr = new FileReader();
+  fr.onerror = function(){ cb(null); };
+  fr.onload = function(){
+    var im = new Image();
+    im.onerror = function(){ cb(null); };
+    im.onload = function(){
+      var side = Math.min(im.naturalWidth, im.naturalHeight);
+      if (!side){ cb(null); return; }
+      var sx = (im.naturalWidth - side)/2, sy = (im.naturalHeight - side)/2;
+      var sizes = [96, 88, 80, 72, 64], qs = [0.82, 0.72, 0.62, 0.52, 0.42, 0.34];
+      var best = null;
+      for (var a=0;a<sizes.length;a++){
+        var cv = document.createElement('canvas'); cv.width = cv.height = sizes[a];
+        var cx = cv.getContext('2d');
+        cx.fillStyle = '#fff'; cx.fillRect(0,0,sizes[a],sizes[a]);
+        cx.imageSmoothingQuality = 'high';
+        cx.drawImage(im, sx, sy, side, side, 0, 0, sizes[a], sizes[a]);
+        for (var b=0;b<qs.length;b++){
+          var d = toUrl64(cv.toDataURL('image/jpeg', qs[b]).split(',')[1] || '');
+          if (d.length <= PHOTO_BUDGET){ cb(d); return; }
+          best = d;
+        }
+      }
+      cb(null);
+    };
+    im.src = fr.result;
+  };
+  fr.readAsDataURL(file);
+}
+function photoSrc(ph){ return 'data:image/jpeg;base64,' + fromUrl64(ph); }
+
+function clip(s, n){ s = String(s == null ? '' : s).trim(); return s.length > n ? s.slice(0,n) : s; }
+function safeImg(u){ u = clip(u, 600); return /^https?:\/\/\S+$/i.test(u) ? u : ''; }
+
+/* ========== 回信通道（ntfy.sh 公共推送服务，免注册） ========== */
+var NTFY = 'https://ntfy.sh';
+var TOPIC_RE = /^[A-Za-z0-9_-]{8,64}$/;
+function newTopic(){
+  var abc = 'abcdefghijklmnopqrstuvwxyz0123456789', out = '';
+  var r = new Uint8Array(16); crypto.getRandomValues(r);
+  for (var i=0;i<16;i++) out += abc[r[i] % abc.length];
+  return 'date-' + out;
+}
+function baseUrl(){ return location.href.split('#')[0]; }
+function repliesUrl(topic){ return baseUrl() + '#reply=' + topic; }
+function fetchTimeout(url, opt, ms){
+  var ctl = window.AbortController ? new AbortController() : null;
+  if (ctl) opt.signal = ctl.signal;
+  var t = setTimeout(function(){ if (ctl) ctl.abort(); }, ms);
+  return fetch(url, opt).then(function(r){ clearTimeout(t); return r; }, function(e){ clearTimeout(t); throw e; });
+}
+// 发到 ntfy：用 JSON 发到根地址，中文标题不用塞进请求头
+function ntfySend(topic, title, message, click){
+  return fetchTimeout(NTFY + '/', {
+    method:'POST', headers:{'Content-Type':'application/json'},
+    body: JSON.stringify({ topic:topic, title:title, message:message, tags:['love_letter','tada'], click:click })
+  }, 12000).then(function(r){ if (!r.ok) throw new Error('HTTP '+r.status); return r.json(); });
+}
+// 拉取这个频道里还在服务器上的所有消息（ntfy.sh 默认留 12 小时）
+function ntfyPoll(topic){
+  return fetchTimeout(NTFY + '/' + encodeURIComponent(topic) + '/json?poll=1&since=all', {cache:'no-store'}, 12000)
+    .then(function(r){ if (!r.ok) throw new Error('HTTP '+r.status); return r.text(); })
+    .then(function(txt){
+      return txt.split('\n').map(function(l){ try{ return JSON.parse(l); }catch(e){ return null; } })
+        .filter(function(m){ return m && m.event === 'message' && m.id; });
+    });
+}
+function store(key, val){
+  try{
+    if (val === undefined){ var s = localStorage.getItem(key); return s ? JSON.parse(s) : null; }
+    localStorage.setItem(key, JSON.stringify(val));
+  }catch(e){ return null; }
+}
+
+function copyText(text, fallbackHost){
+  function fallback(){
+    var ok = false;
+    try{
+      var ta = el('textarea',{style:'position:fixed;top:-1000px;opacity:0'});
+      ta.value = text; document.body.appendChild(ta); ta.focus(); ta.select();
+      ta.setSelectionRange(0, text.length);
+      ok = document.execCommand('copy'); document.body.removeChild(ta);
+    }catch(e){}
+    if (ok) toast('复制好啦 ✨');
+    else {
+      toast('自动复制失败了，长按下面的框手动复制');
+      if (fallbackHost && !fallbackHost.querySelector('.copy-out')){
+        var box = el('textarea',{class:'input copy-out',readonly:true}); box.value = text;
+        fallbackHost.appendChild(box); box.focus(); box.select();
+      }
+    }
+  }
+  if (navigator.clipboard && window.isSecureContext){
+    navigator.clipboard.writeText(text).then(function(){ toast('复制好啦 ✨'); }, fallback);
+  } else fallback();
+}
+
+var WEEK = ['日','一','二','三','四','五','六'];
+function fmtDate(v){
+  var m = /^(\d{4})-(\d{2})-(\d{2})$/.exec(v||''); if (!m) return v||'';
+  var d = new Date(+m[1], +m[2]-1, +m[3]);
+  return (+m[2])+'月'+(+m[3])+'日 周'+WEEK[d.getDay()];
+}
+function todayStr(){
+  var d = new Date(), p = function(x){ return (x<10?'0':'')+x; };
+  return d.getFullYear()+'-'+p(d.getMonth()+1)+'-'+p(d.getDate());
+}
+
+function avatarNode(cfg){
+  var box = el('div',{class:'avatar'});
+  var fb = cfg.av || '💌';
+  if (cfg.ph || cfg.img){
+    var img = el('img',{src: cfg.ph ? photoSrc(cfg.ph) : cfg.img, alt:'', referrerpolicy:'no-referrer'});
+    img.onerror = function(){ box.textContent = fb; };
+    box.appendChild(img);
+  } else box.textContent = fb;
+  return box;
+}
+
+function dots(n){
+  var d = el('div',{class:'dots'});
+  for (var i=1;i<=5;i++) d.appendChild(el('i',{class: i===n ? 'on' : null}));
+  return d;
+}
+
+/* ========== 飘落小花 ========== */
+(function(){
+  var host = document.getElementById('petals');
+  var kinds = ['🌸','🌸','💗','🌷','🌸','💕'];
+  var n = window.innerWidth < 500 ? 12 : 20;
+  for (var i=0;i<n;i++){
+    var p = el('span',{class:'petal',text:kinds[i%kinds.length]});
+    p.style.left = (Math.random()*100)+'%';
+    p.style.fontSize = (12 + Math.random()*12)+'px';
+    p.style.animationDuration = (9 + Math.random()*10)+'s';
+    p.style.animationDelay = (-Math.random()*18)+'s';
+    host.appendChild(p);
+  }
+})();
+
+/* ========== 生成器 ========== */
+function renderGenerator(){
+  document.title = '约会邀请生成器';
+  var st = { g:'f', av:'🐶', ph:'', foods: FOODS.map(function(f){ return !!f[2]; }) };
+  app.innerHTML = '';
+
+  var me = el('input',{class:'input',maxlength:'16',placeholder:'比如：小桃'});
+  var to = el('input',{class:'input',maxlength:'16',placeholder:'比如：阿树（可以不填）'});
+  var q  = el('input',{class:'input',maxlength:'40',placeholder:COPY.f.title});
+  var img = el('input',{class:'input',type:'url',inputmode:'url',placeholder:'https://… 图片地址（可不填）'});
+
+  var segBtns = [];
+  function seg(g, label, small){
+    var b = el('button',{type:'button',onclick:function(){
+      st.g = g; segBtns.forEach(function(x){ x.classList.toggle('on', x === b); });
+      q.placeholder = COPY[g].title;
+    }},[label, el('small',{text:small})]);
+    segBtns.push(b); return b;
+  }
+  var segWrap = el('div',{class:'seg'},[ seg('f','我是女生 👧','发给他'), seg('m','我是男生 👦','发给她') ]);
+  segBtns[0].classList.add('on');
+
+  var avWrap = el('div',{class:'av-pick'});
+  AVATARS.forEach(function(a){
+    var b = el('button',{type:'button',text:a,'aria-label':'头像 '+a,onclick:function(){
+      st.av = a; Array.prototype.forEach.call(avWrap.children,function(x){ x.classList.toggle('on', x===b); });
+      setPhoto(''); img.value = '';
+    }});
+    if (a === st.av) b.classList.add('on');
+    avWrap.appendChild(b);
+  });
+
+  var fileIn = el('input',{type:'file',accept:'image/*',class:'hidden'});
+  var prev = el('div',{class:'photo-prev hidden'});
+  var upBtn = el('button',{type:'button',class:'btn',text:'上传我的照片 📷',onclick:function(){ fileIn.click(); }});
+  var rmBtn = el('button',{type:'button',class:'tiny-link hidden',text:'不用照片',style:'margin:0',onclick:function(){ setPhoto(''); }});
+  function setPhoto(ph){
+    st.ph = ph; prev.innerHTML = '';
+    if (ph){
+      prev.appendChild(el('img',{src:photoSrc(ph),alt:''}));
+      prev.classList.remove('hidden'); rmBtn.classList.remove('hidden');
+      upBtn.textContent = '换一张 📷';
+      Array.prototype.forEach.call(avWrap.children,function(x){ x.classList.remove('on'); });
+    } else {
+      prev.classList.add('hidden'); rmBtn.classList.add('hidden');
+      upBtn.textContent = '上传我的照片 📷';
+      Array.prototype.forEach.call(avWrap.children,function(x){ x.classList.toggle('on', x.textContent===st.av); });
+    }
+  }
+  fileIn.addEventListener('change', function(){
+    var f = fileIn.files && fileIn.files[0]; fileIn.value = '';
+    if (!f) return;
+    upBtn.textContent = '压缩中…';
+    shrinkPhoto(f, function(ph){
+      if (!ph){ toast('这张图读不出来，换一张试试'); setPhoto(st.ph); return; }
+      img.value = ''; setPhoto(ph); toast('照片放好啦 📸');
+    });
+  });
+  var photoRow = el('div',{class:'photo-row'},[prev, upBtn, rmBtn, fileIn]);
+
+  var foodWrap = el('div',{class:'food-pick'});
+  FOODS.forEach(function(f, i){
+    var b = el('button',{type:'button',onclick:function(){
+      st.foods[i] = !st.foods[i]; b.classList.toggle('on', st.foods[i]);
+    }},[el('span',{class:'e',text:f[0]}), el('span',{text:f[1]})]);
+    if (st.foods[i]) b.classList.add('on');
+    foodWrap.appendChild(b);
+  });
+
+  img.addEventListener('input', function(){ if (img.value.trim() && st.ph) setPhoto(''); });
+  var resultBox = el('div',{class:'result-box hidden'});
+
+  function build(){
+    var picked = [];
+    st.foods.forEach(function(on,i){ if (on) picked.push(i); });
+    if (!picked.length){ toast('至少留一个吃的嘛'); return; }
+    var topic = newTopic();
+    var cfg = { v:2, g:st.g, me:clip(me.value,16), to:clip(to.value,16), av:st.av,
+                img:safeImg(img.value), q:clip(q.value,40), f:picked, n:topic };
+    if (img.value.trim() && !cfg.img){ toast('图片地址要以 http(s):// 开头'); return; }
+    var tail = st.ph ? '.' + st.ph : '';
+    var url = baseUrl() + '#' + b64urlEncode(JSON.stringify(cfg)) + tail;
+    cfg.pv = 1;   // 预览版：走一遍但不真的发送
+    var pvUrl = baseUrl() + '#' + b64urlEncode(JSON.stringify(cfg)) + tail;
+    var rUrl = repliesUrl(topic);
+    resultBox.innerHTML = '';
+    resultBox.classList.remove('hidden');
+    var linkOut = el('div',{class:'link-out',text:url});
+    resultBox.appendChild(el('div',{class:'label',text:'你的专属邀请链接 💌'}));
+    resultBox.appendChild(linkOut);
+    resultBox.appendChild(el('div',{class:'btn-pair'},[
+      el('button',{type:'button',class:'btn primary',text:'复制链接',onclick:function(){ copyText(url, resultBox); }}),
+      el('a',{class:'btn',href:pvUrl,target:'_blank',rel:'noopener',style:'text-align:center;text-decoration:none;color:inherit',text:'先预览 👀'})
+    ]));
+    resultBox.appendChild(el('p',{class:'note',text:'这条发给 TA。预览是你自己走一遍，不会真的发出回信。'}));
+
+    resultBox.appendChild(el('div',{class:'sec-title',text:'你的「看回信」链接 📬 自己收好，别发给 TA'}));
+    resultBox.appendChild(el('div',{class:'link-out',text:rUrl}));
+    resultBox.appendChild(el('div',{class:'btn-pair'},[
+      el('button',{type:'button',class:'btn primary',text:'复制看回信链接',onclick:function(){ copyText(rUrl, resultBox); }}),
+      el('a',{class:'btn',href:rUrl,target:'_blank',rel:'noopener',style:'text-align:center;text-decoration:none;color:inherit',text:'打开看看 📬'})
+    ]));
+    resultBox.appendChild(el('p',{class:'note',text:'TA 走完最后一步点「提交」，结果会自动送到这个链接里。打开就能看，不用装任何东西。'}));
+    resultBox.appendChild(el('p',{class:'note warn',text:'回信经过 ntfy.sh 这个公共推送服务中转，在它服务器上只留 12 小时，记得 12 小时内打开看一次（看过的回信这台设备会记住）。拿到这个链接的人都能看到回信，所以别公开发。'}));
+    resultBox.appendChild(el('p',{class:'note',text:'每次点「生成」都会换一个新频道，旧的看回信链接只对应旧的邀请链接。'}));
+    resultBox.scrollIntoView({behavior:'smooth',block:'nearest'});
+  }
+
+  var card = el('section',{class:'card gen'},[
+    el('div',{class:'icon-box',text:'💌'}),
+    el('h1',{text:'约会邀请生成器'}),
+    el('p',{class:'sub',text:'填好发给 crush，TA 只能点「愿意」。'}),
+    el('div',{class:'field'},[ el('span',{class:'label',text:'你是'}), segWrap ]),
+    el('div',{class:'field'},[ el('label',{text:'我的昵称'}), me ]),
+    el('div',{class:'field'},[ el('label',{text:'TA 的昵称'}), to ]),
+    el('div',{class:'field'},[ el('span',{class:'label'},['头像 ',el('small',{text:'选一个，上传照片，或者填图片地址'})]), avWrap, photoRow ]),
+    el('div',{class:'field'},[ img ]),
+    el('div',{class:'field'},[ el('label',{},['第一句话 ',el('small',{text:'不填就用默认',style:'font-weight:500;color:var(--muted)'})]), q ]),
+    el('div',{class:'field'},[ el('span',{class:'label'},['候选吃的 ',el('small',{text:'点一下取消／选上'})]), foodWrap ]),
+    el('button',{type:'button',class:'btn primary block',text:'生成邀请链接 ✨',onclick:build}),
+    resultBox
+  ]);
+  app.appendChild(card);
+}
+
+/* ========== 邀请页 ========== */
+function renderInvite(cfg){
+  var C = COPY[cfg.g];
+  var ans = { date:'', time:'', food:'' };
+  document.title = (cfg.me ? cfg.me + ' 的' : '') + '约会邀请 💌';
+
+  function show(card){
+    app.innerHTML = '';
+    app.appendChild(card);
+    window.scrollTo(0,0);
+  }
+
+  /* 第 1 步 */
+  function step1(){
+    var title = cfg.q || ((cfg.to ? cfg.to + '，' : '') + C.title);
+    var h = el('h1',{},[el('span',{class:'flower',text:'🌸 '}), title, el('span',{class:'flower',text:' 🌸'})]);
+    var yes = el('button',{type:'button',class:'btn primary',id:'yesBtn',text:C.yes,onclick:step2});
+    var no  = el('button',{type:'button',class:'btn',id:'noBtn',text:C.no});
+    var hint = el('div',{class:'hint'});
+    var card = el('section',{class:'card'},[
+      avatarNode(cfg), h,
+      el('p',{class:'sub',text:C.sub}),
+      cfg.me ? el('p',{class:'from',text:'from '+cfg.me+' 💌'}) : null,
+      el('div',{class:'btn-row step1-row'},[yes,no]),
+      hint, dots(1)
+    ]);
+    var n = 0, total = C.noSteps.length;
+
+    var sub = card.querySelector('.sub'), dotsEl = card.querySelector('.dots');
+    no.addEventListener('click', function(){
+      n++;
+      if (n > total){
+        no.style.opacity = '0';
+        no.style.transform = 'scale(0)';
+        setTimeout(function(){ no.classList.add('hidden'); }, 300);
+        hint.textContent = C.noGoneHint;
+        return;
+      }
+      no.textContent = C.noSteps[n-1];
+      var grow = Math.min(1 + n*0.13, 1.9);
+      yes.style.fontSize = (16*grow).toFixed(1)+'px';
+      yes.style.padding = (11*grow).toFixed(0)+'px '+(22*grow).toFixed(0)+'px';
+      yes.classList.remove('boing'); void yes.offsetWidth; yes.classList.add('boing');
+      dodge();
+    });
+
+    // 「不要」脱离按钮行，在卡片里乱跑，躲开「愿意」和标题
+    function dodge(){
+      var s = Math.max(1 - n*0.06, 0.55);
+      if (no.style.position !== 'absolute'){
+        var x0 = no.offsetLeft, y0 = no.offsetTop;   // 卡片坐标
+        no.style.position = 'absolute'; no.style.margin = '0';
+        no.style.left = x0+'px'; no.style.top = y0+'px';
+        void no.offsetWidth;
+      }
+      no.style.transform = 'scale('+s.toFixed(2)+')';
+      var cw = card.clientWidth;
+      var bw = no.offsetWidth * s, bh = no.offsetHeight * s;
+      var cur = { x: parseFloat(no.style.left)||0, y: parseFloat(no.style.top)||0 };
+      var yx = yes.offsetLeft, yy = yes.offsetTop, yw = yes.offsetWidth, yh = yes.offsetHeight;
+      var pad = 16, top = sub.offsetTop, bottom = dotsEl.offsetTop - bh - 6;
+      if (bottom < top) bottom = top;
+      var x = cur.x, y = cur.y;
+      for (var i=0;i<40;i++){
+        x = pad + Math.random() * Math.max(0, cw - bw - pad*2);
+        y = top + Math.random() * (bottom - top);
+        var hitYes = x < yx + yw + 10 && x + bw > yx - 10 && y < yy + yh + 10 && y + bh > yy - 10;
+        var same = Math.abs(x - cur.x) < 50 && Math.abs(y - cur.y) < 24;
+        if (!hitYes && !same) break;
+      }
+      no.style.left = x.toFixed(0)+'px'; no.style.top = y.toFixed(0)+'px';
+    }
+    show(card);
+  }
+
+  /* 第 2 步 */
+  function step2(){
+    show(el('section',{class:'card'},[
+      el('div',{class:'icon-box red',text:'🎉'}),
+      el('h1',{text:C.s2Title}),
+      el('p',{class:'sub',text:C.s2Sub}),
+      el('button',{type:'button',class:'btn primary',text:C.s2Btn,onclick:step3}),
+      dots(2)
+    ]));
+  }
+
+  /* 第 3 步 */
+  function step3(){
+    var date = el('input',{class:'input',type:'date',min:todayStr(),'aria-label':'日期'});
+    var time = el('input',{class:'input',type:'time',step:'300','aria-label':'时间'});
+    if (ans.date) date.value = ans.date;
+    if (ans.time) time.value = ans.time;
+    var chips = el('div',{class:'chips'});
+    function syncChips(){
+      Array.prototype.forEach.call(chips.children,function(c){ c.classList.toggle('on', c.textContent === time.value); });
+    }
+    TIME_CHIPS.forEach(function(t){
+      chips.appendChild(el('button',{type:'button',class:'chip',text:t,onclick:function(){ time.value = t; syncChips(); }}));
+    });
+    time.addEventListener('input', syncChips); time.addEventListener('change', syncChips);
+    syncChips();
+    var card = el('section',{class:'card'},[
+      el('div',{class:'icon-box',text:'📅'}),
+      el('h1',{text:C.s3Title}),
+      el('p',{class:'sub',text:C.s3Sub}),
+      el('div',{class:'field'},[el('label',{text:'选一天 📆'}), date]),
+      el('div',{class:'field'},[el('label',{text:'几点见？⏰'}), time, chips]),
+      el('button',{type:'button',class:'btn primary block',text:'确定好啦 ❤',onclick:function(){
+        if (!date.value || !time.value){
+          card.classList.remove('shake'); void card.offsetWidth; card.classList.add('shake');
+          toast(!date.value ? '还没选哪天呢' : '还没选几点呢');
+          return;
+        }
+        ans.date = date.value; ans.time = time.value; step4();
+      }}),
+      dots(3)
+    ]);
+    show(card);
+  }
+
+  /* 第 4 步 */
+  function step4(){
+    var grid = el('div',{class:'food-grid'});
+    var otherBox = el('div',{class:'other-box hidden'});
+    var otherInput = el('input',{class:'input',maxlength:'16',placeholder:'想吃什么？'});
+    otherBox.appendChild(otherInput);
+    otherBox.appendChild(el('button',{type:'button',class:'btn primary small',text:'就它',onclick:function(){
+      var v = clip(otherInput.value,16);
+      if (!v){ toast('写一下想吃啥嘛'); otherInput.focus(); return; }
+      ans.food = v; setTimeout(step5, 200);
+    }}));
+    (cfg.f||[]).forEach(function(i){
+      var f = FOODS[i]; if (!f) return;
+      var b = el('button',{type:'button',class:'food'},[el('span',{class:'e',text:f[0]}), el('span',{class:'t',text:f[1]})]);
+      b.addEventListener('click', function(){
+        Array.prototype.forEach.call(grid.children,function(x){ x.classList.toggle('on', x===b); });
+        if (i === OTHER_INDEX){ otherBox.classList.remove('hidden'); otherInput.focus(); return; }
+        otherBox.classList.add('hidden');
+        ans.food = f[1]; setTimeout(step5, 350);
+      });
+      grid.appendChild(b);
+    });
+    show(el('section',{class:'card'},[
+      el('h1',{text:C.s4Title}),
+      el('p',{class:'sub',text:C.s4Sub}),
+      grid, otherBox, dots(4)
+    ]));
+  }
+
+  /* 第 5 步 */
+  function step5(){
+    var d = fmtDate(ans.date), t = ans.time, f = ans.food;
+    var h = el('h1');
+    C.s5Title.split('\n').forEach(function(line, i){ if (i) h.appendChild(el('br')); h.appendChild(document.createTextNode(line)); });
+    var actions = el('div');
+    var card = el('section',{class:'card'},[
+      avatarNode(cfg), h,
+      el('p',{class:'sub',text:C.s5Line(d.replace(/ 周.$/,''), t, f)}),
+      el('div',{class:'summary'},[
+        el('div',{class:'cell'},[el('div',{class:'k',text:'DATE · '+d.slice(-2)}), el('div',{class:'v',text:d.replace(/ 周.$/,'')})]),
+        el('div',{class:'cell'},[el('div',{class:'k',text:'TIME'}), el('div',{class:'v',text:t})]),
+        el('div',{class:'cell wide'},[el('div',{class:'k',text:'FOOD'}), el('div',{class:'v',text:f})])
+      ]),
+      el('div',{class:'hearts',text:'♥♥♥♥♥'}),
+      actions, dots(5)
+    ]);
+    var text = C.reply(cfg.me, d, t, f);
+    var again = el('button',{type:'button',class:'tiny-link',text:'重新选一次',onclick:function(){ ans.food=''; step3(); }});
+
+    function copyMode(){
+      actions.innerHTML = '';
+      actions.appendChild(el('button',{type:'button',class:'btn primary block',text:'复制结果发给 TA 💌',onclick:function(){ copyText(text, actions); }}));
+      actions.appendChild(el('p',{class:'note',text:'复制好了发给 TA，或者直接截图这张卡片 📸'}));
+      actions.appendChild(again);
+    }
+    if (!cfg.n){ copyMode(); show(card); return; }   // 旧链接没有回信频道，照旧复制
+
+    var sendBtn = el('button',{type:'button',class:'btn primary block',text:'提交给 TA 💌'});
+    var status = el('p',{class:'note',text: cfg.pv ? '这是预览：点提交不会真的发出去。' : '点一下，结果会直接送到 TA 那里。'});
+    var copyBtn = el('button',{type:'button',class:'tiny-link',text:'送不出去？复制结果自己发',onclick:function(){ copyText(text, actions); }});
+    sendBtn.addEventListener('click', function(){
+      if (cfg.pv){
+        status.textContent = '预览模式不发送。真的邀请链接里，TA 点这里就会直接送到你的看回信页。';
+        toast('预览：没有真的发出去 👀'); return;
+      }
+      sendBtn.disabled = true; sendBtn.textContent = '正在送过去…';
+      var who = cfg.to || 'TA';
+      var title = who + ' 答应和你约会啦 💕';
+      var msg = text + '\n\n（来自 ' + who + ' 刚刚点的提交）';
+      ntfySend(cfg.n, title, msg, repliesUrl(cfg.n)).then(function(){
+        actions.innerHTML = '';
+        actions.appendChild(el('div',{class:'sent-ok',text:'已经送到 TA 那里啦 ✨'}));
+        actions.appendChild(el('p',{class:'note',text:'TA 那边马上就能看到。想留个纪念可以截图这张卡片 📸'}));
+        actions.appendChild(copyBtn); actions.appendChild(el('br')); actions.appendChild(again);
+        toast('送到啦 💌');
+      }, function(){
+        toast('网络不太好，没送出去，复制结果发给 TA 吧');
+        copyMode();
+        actions.insertBefore(el('p',{class:'note warn',text:'刚才没送出去（网络或者推送服务出了问题）。可以点下面复制结果自己发，也可以截图。'}), actions.firstChild);
+        var retry = el('button',{type:'button',class:'tiny-link',text:'再试一次提交',onclick:function(){ step5(); }});
+        actions.appendChild(el('br')); actions.appendChild(retry);
+      });
+    });
+    actions.appendChild(sendBtn); actions.appendChild(status);
+    actions.appendChild(copyBtn); actions.appendChild(el('br')); actions.appendChild(again);
+    show(card);
+  }
+
+  step1();
+}
+
+/* ========== 看回信 ========== */
+function renderReplies(topic){
+  document.title = '看回信 📬';
+  var KEY = 'date-replies:' + topic;
+  var seen = store(KEY) || {};
+  var list = el('div');
+  var stamp = el('p',{class:'note',text:''});
+  var refreshBtn = el('button',{type:'button',class:'btn block',text:'刷新一下 🔄',onclick:function(){ load(true); }});
+  var timer = null;
+
+  function fmtTime(sec){
+    var d = new Date(sec*1000), p = function(x){ return (x<10?'0':'')+x; };
+    return (d.getMonth()+1)+'月'+d.getDate()+'日 '+p(d.getHours())+':'+p(d.getMinutes());
+  }
+  function pick(lines, mark){
+    for (var i=0;i<lines.length;i++) if (lines[i].indexOf(mark) === 0) return lines[i].slice(mark.length).trim();
+    return '';
+  }
+  function draw(){
+    var arr = Object.keys(seen).map(function(k){ return seen[k]; }).sort(function(a,b){ return b.time - a.time; });
+    list.innerHTML = '';
+    if (!arr.length){
+      list.appendChild(el('div',{class:'waiting'},['还在等 TA 点提交',el('span',{class:'dots-anim'})]));
+      list.appendChild(el('p',{class:'sub',style:'margin:6px 0 16px',text:'TA 一提交，这里就会出现。页面开着会自己每 20 秒看一次。'}));
+      return;
+    }
+    arr.forEach(function(m, i){
+      var lines = String(m.message||'').split('\n');
+      var dd = pick(lines,'📅'), tt = pick(lines,'⏰'), ff = pick(lines,'🍽️');
+      var cardKids = [
+        el('div',{class:'when',text:(i===0 ? '最新 · ' : '') + fmtTime(m.time)}),
+        el('h1',{style:'font-size:19px;margin:0 0 10px',text:String(m.title||'收到一条回信 💌')})
+      ];
+      if (dd || tt || ff){
+        cardKids.push(el('div',{class:'summary'},[
+          el('div',{class:'cell'},[el('div',{class:'k',text:'DATE' + (/ 周.$/.test(dd) ? ' · ' + dd.slice(-2) : '')}), el('div',{class:'v',text:dd.replace(/ 周.$/,'')||'?'})]),
+          el('div',{class:'cell'},[el('div',{class:'k',text:'TIME'}), el('div',{class:'v',text:tt||'?'})]),
+          el('div',{class:'cell wide'},[el('div',{class:'k',text:'FOOD'}), el('div',{class:'v',text:ff||'?'})])
+        ]));
+      }
+      cardKids.push(el('div',{class:'msg',text:String(m.message||'')}));
+      list.appendChild(el('div',{class:'reply-card'},cardKids));
+    });
+    if (arr.length > 1) list.appendChild(el('p',{class:'note',text:'TA 提交了不止一次，最上面那条是最新的。'}));
+  }
+  function load(manual){
+    if (manual){ refreshBtn.disabled = true; refreshBtn.textContent = '看看有没有…'; }
+    ntfyPoll(topic).then(function(msgs){
+      var before = Object.keys(seen).length;
+      msgs.forEach(function(m){
+        seen[m.id] = { id:m.id, time:m.time, title:clip(m.title,80), message:clip(m.message,800) };
+      });
+      store(KEY, seen);
+      draw();
+      var now = new Date(), p = function(x){ return (x<10?'0':'')+x; };
+      stamp.textContent = '上次查看 ' + p(now.getHours()) + ':' + p(now.getMinutes()) + ':' + p(now.getSeconds());
+      if (manual) toast(Object.keys(seen).length > before ? '有新回信 💌' : '还没有新的');
+    }, function(){
+      draw();
+      stamp.textContent = '连不上推送服务，稍后再刷新试试';
+      if (manual) toast('网络不太好，等会儿再刷新');
+    }).then(function(){
+      refreshBtn.disabled = false; refreshBtn.textContent = '刷新一下 🔄';
+    });
+  }
+
+  app.innerHTML = '';
+  app.appendChild(el('section',{class:'card'},[
+    el('div',{class:'icon-box',text:'📬'}),
+    el('h1',{text:'TA 的回信'}),
+    list,
+    refreshBtn, stamp,
+    el('p',{class:'note',style:'text-align:left',text:'回信在服务器上只留 12 小时；这台设备看到过的会一直留在这里。这个链接别发给别人。'})
+  ]));
+  draw();
+  load(false);
+  timer = setInterval(function(){ if (!document.hidden) load(false); }, 20000);
+  window.addEventListener('hashchange', function stop(){ clearInterval(timer); window.removeEventListener('hashchange', stop); });
+}
+
+/* ========== 入口 ========== */
+function parse(){
+  var h = location.hash.replace(/^#/,'');
+  if (!h) return null;
+  var dot = h.indexOf('.'), ph = '';
+  if (dot > 0){ ph = h.slice(dot+1); h = h.slice(0,dot); }
+  if (ph && !/^[A-Za-z0-9_-]{100,6000}$/.test(ph)) ph = '';
+  try{
+    var o = JSON.parse(b64urlDecode(h));
+    if (!o || typeof o !== 'object') return false;
+    var f = Array.isArray(o.f) ? o.f.filter(function(i){ return Number.isInteger(i) && i>=0 && i<FOODS.length; }) : [];
+    if (!f.length) f = FOODS.map(function(_,i){ return i; }).filter(function(i){ return FOODS[i][2]; });
+    return {
+      g: o.g === 'm' ? 'm' : 'f',
+      me: clip(o.me,16), to: clip(o.to,16),
+      av: clip(o.av,8) || '💌', img: safeImg(o.img||''), ph: ph,
+      q: clip(o.q,40), f: f,
+      n: (typeof o.n === 'string' && TOPIC_RE.test(o.n)) ? o.n : '',
+      pv: o.pv === 1
+    };
+  }catch(e){ return false; }
+}
+
+function route(){
+  var m = /^#reply=([A-Za-z0-9_-]+)$/.exec(location.hash);
+  if (m && TOPIC_RE.test(m[1])){ renderReplies(m[1]); return; }
+  var cfg = parse();
+  if (cfg) renderInvite(cfg);
+  else { renderGenerator(); if (cfg === false) toast('链接好像不完整，重新生成一个吧'); }
+}
+window.addEventListener('hashchange', route);
+route();
+})();
+</script>
+</body>
+</html>
